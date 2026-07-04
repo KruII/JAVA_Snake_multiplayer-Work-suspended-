@@ -5,174 +5,86 @@ import java.awt.event.*;
 import javax.swing.*;
 
 public class Zwyciestwo extends JPanel {
-    public Zwyciestwo(){
-        this.setPreferredSize(new Dimension(Gra.Szerokosc,Gra.Wysokosc));
-        this.setBackground(new Color(23,45,64));
+    public Zwyciestwo() {
+        this.setPreferredSize(new Dimension(Gra.Szerokosc, Gra.Wysokosc));
+        this.setBackground(new Color(23, 45, 64));
         this.setLayout(null);
         this.setFocusable(false);
 
         JLabel text = new JLabel("WYGRALES", JLabel.CENTER);
         text.setFocusable(false);
-        text.setFont(new Font("Biting My Nails",Font.BOLD,Gra.Szerokosc/10));
-        text.setBounds(0, (Gra.Wysokosc/Gra.PunktyMapy)*2, Gra.Szerokosc, text.getFont().getSize());
+        text.setFont(new Font("Biting My Nails", Font.BOLD, Gra.Szerokosc / 10));
+        text.setBounds(0, Math.max(40, Gra.Wysokosc / 8), Gra.Szerokosc, text.getFont().getSize());
         text.setForeground(Color.BLACK);
         this.add(text);
 
-        JButton sprobojPonownie = new JButton("Zagraj Ponownie");
-        sprobojPonownie.setFocusable(false);
-        sprobojPonownie.setBorder(BorderFactory.createLineBorder(Color.BLACK,5));
-        sprobojPonownie.setFont(new Font("Biting My Nails",Font.BOLD,Gra.Szerokosc/40));
-        FontMetrics Metryka = getFontMetrics(sprobojPonownie.getFont());
-        sprobojPonownie.setBounds((Gra.Szerokosc)/2-((Metryka.stringWidth("Zagraj Ponownie"))+Gra.Szerokosc/40)/2, Gra.Wysokosc/2, (Metryka.stringWidth("Zagraj Ponownie"))+Gra.Szerokosc/40, sprobojPonownie.getFont().getSize()+Gra.Wysokosc/40);
-        sprobojPonownie.setForeground(Color.BLACK);
-        sprobojPonownie.setBackground(new Color(100,17,100));
-        sprobojPonownie.setContentAreaFilled(false);
-        sprobojPonownie.addMouseListener(new MouseListener(){
+        JButton sprobojPonownie = przycisk("Zagraj Ponownie", Gra.Wysokosc / 2);
+        sprobojPonownie.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                Gra.hosthostowanie=false;
+                resetStanuGry();
                 Gra.panelPrzegrana.setVisible(false);
                 Gra.panelZwyciestwo.setVisible(false);
-                Gra.prawo=false;
-                Gra.lewo=false;
-                Gra.gora=false;
-                Gra.dol=false;
-                Gra.brakruchu=true;
-                Gra.pauza=false;
-                Gra.pauzaserwera=false;
-                Gra.StartGry=false;
-                Gra.Multi=false;
-                Gra.host=false;
-                Gra.klient=false;
-                Gra.zwyciestwo=false;
-                Gra.opcja=false;
-                Gramainwykonanie.dzialanie=true;
-                for(int i=0;i<Gramainwykonanie.x.length;i++){
-                    Gramainwykonanie.x[i]=((int)(Gra.Szerokosc/2/App.JEDNOSTA_WIELKOSCI_KWADRATU))*App.JEDNOSTA_WIELKOSCI_KWADRATU;
-                    Gramainwykonanie.y[i]=((Gra.Wysokosc/2/App.JEDNOSTA_WIELKOSCI_KWADRATU))*App.JEDNOSTA_WIELKOSCI_KWADRATU;}
-                Gramainwykonanie.Zjedzone=0;
-                Gramainwykonanie.CZASOmierz.start();
+                Gra.panelGry.restartGry();
                 Gra.panelGry.setVisible(true);
-                Gra.StartGry=true;
+                Gra.StartGry = true;
             }
-
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                sprobojPonownie.setContentAreaFilled(false);
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                sprobojPonownie.setContentAreaFilled(true);
-            }
-
-            @Override
-            public void mousePressed(java.awt.event.MouseEvent e) {
-                sprobojPonownie.setContentAreaFilled(false);
-            }
-
-            @Override
-            public void mouseReleased(java.awt.event.MouseEvent e) {
-                sprobojPonownie.setContentAreaFilled(true);
-            }
-            
         });
         this.add(sprobojPonownie);
 
-        JButton wyjdz2 = new JButton("Wyjdz Do Lobby");
-        wyjdz2.setFocusable(false);
-        wyjdz2.setBorder(BorderFactory.createLineBorder(Color.BLACK,5));
-        wyjdz2.setFont(new Font("Biting My Nails",Font.BOLD,Gra.Szerokosc/40));
-        wyjdz2.setBounds((Gra.Szerokosc)/2-((Metryka.stringWidth("Zagraj Ponownie"))+Gra.Szerokosc/40)/2, Gra.Wysokosc/2+(sprobojPonownie.getFont().getSize()+Gra.Wysokosc/40)*2, (Metryka.stringWidth("Zagraj Ponownie"))+Gra.Szerokosc/40, sprobojPonownie.getFont().getSize()+Gra.Wysokosc/40);
-        wyjdz2.setForeground(Color.BLACK);
-        wyjdz2.setBackground(new Color(100,17,100));
-        wyjdz2.setContentAreaFilled(true);
-        wyjdz2.addMouseListener(new MouseListener(){
+        JButton wyjdz2 = przycisk("Wyjdz Do Lobby", Gra.Wysokosc / 2 + Math.max(70, Gra.Wysokosc / 8));
+        wyjdz2.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                Gra.hosthostowanie=false;
+                resetStanuGry();
                 Gra.panelPrzegrana.setVisible(false);
                 Gra.panelZwyciestwo.setVisible(false);
-                Gra.prawo=false;
-                Gra.lewo=false;
-                Gra.gora=false;
-                Gra.dol=false;
-                Gra.brakruchu=true;
-                Gra.pauza=false;
-                Gra.pauzaserwera=false;
-                Gra.StartGry=false;
-                Gra.Multi=false;
-                Gra.host=false;
-                Gra.klient=false;
-                Gra.zwyciestwo=false;
-                Gra.opcja=false;
+                Gra.panelGry.restartGry();
                 Gra.panelStart.setVisible(true);
-                Gramainwykonanie.dzialanie=true;
-                for(int i=0;i<Gramainwykonanie.x.length;i++){
-                    Gramainwykonanie.x[i]=((int)(Gra.Szerokosc/2/App.JEDNOSTA_WIELKOSCI_KWADRATU))*App.JEDNOSTA_WIELKOSCI_KWADRATU;
-                    Gramainwykonanie.y[i]=((Gra.Wysokosc/2/App.JEDNOSTA_WIELKOSCI_KWADRATU))*App.JEDNOSTA_WIELKOSCI_KWADRATU;}
-                Gramainwykonanie.Zjedzone=0;
-                Gramainwykonanie.CZASOmierz.start();
             }
-
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                wyjdz2.setContentAreaFilled(false);
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                wyjdz2.setContentAreaFilled(true);
-            }
-
-            @Override
-            public void mousePressed(java.awt.event.MouseEvent e) {
-                wyjdz2.setContentAreaFilled(false);
-            }
-
-            @Override
-            public void mouseReleased(java.awt.event.MouseEvent e) {
-                wyjdz2.setContentAreaFilled(true);
-            }
-            
         });
         this.add(wyjdz2);
 
-        JButton wyjdz = new JButton("Wyjdz Z Gry");
-        wyjdz.setFocusable(false);
-        wyjdz.setBorder(BorderFactory.createLineBorder(Color.BLACK,5));
-        wyjdz.setFont(new Font("Biting My Nails",Font.BOLD,Gra.Szerokosc/40));
-        wyjdz.setBounds((Gra.Szerokosc)/2-((Metryka.stringWidth("Zagraj Ponownie"))+Gra.Szerokosc/40)/2, Gra.Wysokosc/2+(sprobojPonownie.getFont().getSize()+Gra.Wysokosc/40)*4, (Metryka.stringWidth("Zagraj Ponownie"))+Gra.Szerokosc/40, sprobojPonownie.getFont().getSize()+Gra.Wysokosc/40);
-        wyjdz.setForeground(Color.BLACK);
-        wyjdz.setBackground(new Color(100,17,100));
-        wyjdz.setContentAreaFilled(true);
-        wyjdz.addMouseListener(new MouseListener(){
+        JButton wyjdz = przycisk("Wyjdz Z Gry", Gra.Wysokosc / 2 + Math.max(140, Gra.Wysokosc / 4));
+        wyjdz.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
                 System.exit(0);
             }
-
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                wyjdz.setContentAreaFilled(false);
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                wyjdz.setContentAreaFilled(true);
-            }
-
-            @Override
-            public void mousePressed(java.awt.event.MouseEvent e) {
-                wyjdz.setContentAreaFilled(false);
-            }
-
-            @Override
-            public void mouseReleased(java.awt.event.MouseEvent e) {
-                wyjdz.setContentAreaFilled(true);
-            }
-            
         });
         this.add(wyjdz);
+    }
+
+    private JButton przycisk(String text, int y) {
+        JButton button = new JButton(text);
+        button.setFocusable(false);
+        button.setBorder(BorderFactory.createLineBorder(Color.BLACK, 5));
+        button.setFont(new Font("Biting My Nails", Font.BOLD, Math.max(18, Gra.Szerokosc / 40)));
+        FontMetrics metryka = getFontMetrics(button.getFont());
+        int width = metryka.stringWidth(text) + Math.max(40, Gra.Szerokosc / 40);
+        int height = button.getFont().getSize() + Math.max(28, Gra.Wysokosc / 40);
+        button.setBounds(Gra.Szerokosc / 2 - width / 2, y, width, height);
+        button.setForeground(Color.BLACK);
+        button.setBackground(new Color(100, 17, 100));
+        button.setContentAreaFilled(true);
+        return button;
+    }
+
+    private void resetStanuGry() {
+        Gra.hosthostowanie = false;
+        Gra.prawo = false;
+        Gra.lewo = false;
+        Gra.gora = false;
+        Gra.dol = false;
+        Gra.brakruchu = true;
+        Gra.pauza = false;
+        Gra.pauzaserwera = false;
+        Gra.StartGry = false;
+        Gra.Multi = false;
+        Gra.host = false;
+        Gra.klient = false;
+        Gra.zwyciestwo = false;
+        Gra.opcja = false;
+        Gramainwykonanie.dzialanie = true;
     }
 }
