@@ -78,5 +78,38 @@ public class Ucieczka extends JPanel {
             
         });
         this.add(opcje2);
+
+        JButton wyjdz = new JButton("Wyjdz Do Menu");
+        wyjdz.setFocusable(false);
+        wyjdz.setBorder(BorderFactory.createLineBorder(Color.BLACK,5));
+        wyjdz.setBounds(Gra.Szerokosc/2-Gra.Szerokosc/10, (Gra.Wysokosc/10)*3+(Gra.Wysokosc/20)*2, Gra.Szerokosc/5,Gra.Wysokosc/10);
+        wyjdz.setFont(new Font("Biting My Nails",Font.BOLD,Gra.Szerokosc/40));
+        wyjdz.setForeground(Color.BLACK);
+        wyjdz.setBackground(new Color(13,17,23));
+        wyjdz.setContentAreaFilled(false);
+        wyjdz.addMouseListener(new MouseListener(){
+
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                /* Wyjście do menu głównego */
+                Gra.panelUcieczka.setVisible(false);
+                Gra.panelStart.setVisible(true);
+                Gra.pauza=false;
+            }
+
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {wyjdz.setContentAreaFilled(true);}
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {wyjdz.setContentAreaFilled(false);}
+
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {wyjdz.setContentAreaFilled(false);}
+
+            @Override
+            public void mouseReleased(java.awt.event.MouseEvent e) {wyjdz.setContentAreaFilled(true);}
+            
+        });
+        this.add(wyjdz);
     }
 }
