@@ -5,6 +5,10 @@ import launcher.LauncherConfig;
 import launcher.MonitorOption;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.basic.BasicComboBoxUI;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
@@ -12,8 +16,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class App implements ActionListener {
-    private static final int LAUNCHER_WIDTH = Math.max(900, GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth() / 2);
-    private static final int LAUNCHER_HEIGHT = Math.max(580, GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getHeight() / 2);
+    private static final int Wysokosc = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getHeight() / 2,
+            Szerokosc = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth() / 2,
+            WysokoscW = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getHeight() / 4,
+            SzerokoscS = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth() / 4;
 
     public static final int PLANSZA_KOLUMNY = SnakeGrid.COLUMNS;
     public static final int PLANSZA_WIERSZE = SnakeGrid.ROWS;
@@ -23,56 +29,63 @@ public class App implements ActionListener {
             CZESCICIALA_WESZA = 5;
 
     private JFrame ramka;
-    private JPanel belka, panelOpcji, panelPodgladu;
-    private Point compCoords;
+    private JPanel panel, obraz, grafika, sterowanie;
+    private Font czcionka2 = new Font("Bahnschift", Font.BOLD, 20);
+    private Border krawedzie = BorderFactory.createLineBorder(Color.ORANGE, 5);
+    private Border margines = new EmptyBorder(0, 10, 0, 10);
+    private CompoundBorder border = new CompoundBorder(krawedzie, margines);
+    private static Point compCoords;
 
-    private JComboBox<GameEntry> wyborGryComboBox;
+    private JButton Wyjscie, Graj;
+    private JComboBox<GameEntry> graComboBox;
     private JComboBox<MonitorOption> monitorComboBox;
-    private JComboBox<String> rozdzielczoscComboBox;
+    private JComboBox<String> grafikaComboBox;
+    private JComboBox<String> jakoscComboBox;
     private JCheckBox PelnyEkran, WczytanieZapisu;
 
     private final List<GameEntry> gry = GameEntry.domyslneGry();
     private List<MonitorOption> monitory = new ArrayList<MonitorOption>();
     private List<Dimension> aktualneRozdzielczosci = new ArrayList<Dimension>();
 
-    private int GrafikaS = 1280;
-    private int GrafikaW = 720;
+    private int GrafikaW = Wysokosc * 2,
+            GrafikaS = Szerokosc * 2;
+
+    private ImageIcon TrueIcon, FalseIcon;
 
     public App() {
         monitory = MonitorOption.pobierzMonitory();
 
-        ramka = new JFrame("Game Hub");
+        ramka = new JFrame("Gra");
         ramka.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        ramka.setBounds(
-                (Toolkit.getDefaultToolkit().getScreenSize().width - LAUNCHER_WIDTH) / 2,
-                (Toolkit.getDefaultToolkit().getScreenSize().height - LAUNCHER_HEIGHT) / 2,
-                LAUNCHER_WIDTH,
-                LAUNCHER_HEIGHT
-        );
-        ramka.setUndecorated(true);
-        ramka.setResizable(false);
+        ramka.setBounds(SzerokoscS, WysokoscW, Szerokosc, Wysokosc);
+        ramka.getContentPane().setBackground(new Color(20, 20, 20));
         ramka.setLayout(null);
-        ramka.getContentPane().setBackground(new Color(13, 17, 23));
-        ramka.setShape(new RoundRectangle2D.Double(1, 1, LAUNCHER_WIDTH, LAUNCHER_HEIGHT, 32, 32));
+        ramka.setUndecorated(true);
+        ramka.setLocationRelativeTo(null);
+        ramka.setShape(new RoundRectangle2D.Double(1, 1, Szerokosc, Wysokosc, Wysokosc / 10, Wysokosc / 10));
+        ramka.setResizable(false);
 
-        zbudujBelke();
-        zbudujPanelOpcji();
-        zbudujPanelPodgladu();
+        zbudujGornaBelke();
+        zbudujPanelObrazu();
+        zbudujPanelGrafiki();
+        zbudujPanelSterowania();
         wczytajUstawieniaDoLaunchera();
 
-        ramka.add(belka);
-        ramka.add(panelOpcji);
-        ramka.add(panelPodgladu);
+        ramka.add(grafika);
+        ramka.add(sterowanie);
+        ramka.add(obraz);
+        ramka.add(panel);
         ramka.setVisible(true);
     }
 
-    private void zbudujBelke() {
-        belka = new JPanel();
-        belka.setBackground(new Color(8, 11, 17));
-        belka.setBounds(0, 0, LAUNCHER_WIDTH, 44);
-        belka.setLayout(new FlowLayout(FlowLayout.RIGHT, 8, 4));
+    private void zbudujGornaBelke() {
+        panel = new JPanel();
+        panel.setBackground(new Color(10, 10, 10));
+        panel.setBounds(0, 0, Szerokosc, Wysokosc / 16);
+        panel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+        compCoords = null;
 
-        belka.addMouseListener(new MouseAdapter() {
+        panel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 compCoords = e.getPoint();
@@ -84,7 +97,7 @@ public class App implements ActionListener {
             }
         });
 
-        belka.addMouseMotionListener(new MouseMotionAdapter() {
+        panel.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
                 if (compCoords == null) {
@@ -96,55 +109,79 @@ public class App implements ActionListener {
             }
         });
 
-        JButton zamknij = new JButton("×");
-        zamknij.setFocusable(false);
-        zamknij.setBorder(null);
-        zamknij.setForeground(Color.WHITE);
-        zamknij.setFont(new Font("Arial", Font.BOLD, 30));
-        zamknij.setContentAreaFilled(false);
-        zamknij.addActionListener(new ActionListener() {
+        Wyjscie = new JButton("×");
+        Wyjscie.setFocusable(false);
+        Wyjscie.setBorder(null);
+        Wyjscie.setHorizontalTextPosition(JButton.CENTER);
+        Wyjscie.setVerticalTextPosition(JButton.TOP);
+        Wyjscie.setForeground(Color.WHITE);
+        Wyjscie.setFont(new Font("Bahnschift", Font.BOLD, 30));
+        Wyjscie.setBorder(new EmptyBorder(-Wysokosc / 64, 10, 10, 10));
+        Wyjscie.setBackground(null);
+        Wyjscie.setContentAreaFilled(false);
+        Wyjscie.addMouseListener(new MouseAdapter() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void mouseClicked(MouseEvent e) {
+                Wyjscie.setForeground(Color.RED);
                 System.exit(0);
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                Wyjscie.setForeground(Color.RED);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                Wyjscie.setForeground(Color.WHITE);
             }
         });
 
-        belka.add(zamknij);
+        panel.add(Wyjscie);
     }
 
-    private void zbudujPanelOpcji() {
-        panelOpcji = new JPanel();
-        panelOpcji.setLayout(null);
-        panelOpcji.setBackground(new Color(13, 17, 23));
-        panelOpcji.setBounds(32, 72, LAUNCHER_WIDTH / 2 - 48, LAUNCHER_HEIGHT - 104);
+    private void zbudujPanelObrazu() {
+        obraz = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                rysujPodglad((Graphics2D) g);
+            }
+        };
+        obraz.setBackground(new Color(10, 10, 10));
+        obraz.setBounds(Szerokosc / 40, Wysokosc / 10, Szerokosc / 3 + Szerokosc / 10, (Wysokosc / 5) * 2);
+        obraz.setLayout(null);
+        obraz.setBorder(border);
+    }
 
-        JLabel tytul = etykieta("GAME HUB", 0, 0, panelOpcji.getWidth(), 58, 36, Color.WHITE);
-        panelOpcji.add(tytul);
+    private void zbudujPanelGrafiki() {
+        grafika = new JPanel();
+        grafika.setBackground(new Color(10, 10, 10));
+        grafika.setBounds(Szerokosc / 40, Wysokosc / 2 + Wysokosc / 15, Szerokosc / 3 + Szerokosc / 10, (Wysokosc / 5) * 2);
+        grafika.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        grafika.setBorder(border);
 
-        JLabel opis = etykieta("Wybierz gre, monitor i tryb okna. Reszta niech nie udaje magii.", 4, 58, panelOpcji.getWidth(), 34, 14, new Color(156, 163, 175));
-        opis.setHorizontalAlignment(SwingConstants.LEFT);
-        panelOpcji.add(opis);
-
-        wyborGryComboBox = new JComboBox<GameEntry>(gry.toArray(new GameEntry[0]));
-        ustawCombo(wyborGryComboBox);
-        dodajOpisanePole(panelOpcji, "Gra", wyborGryComboBox, 118);
+        graComboBox = new JComboBox<GameEntry>(gry.toArray(new GameEntry[0]));
+        stylComboBox(graComboBox);
+        grafika.add(graComboBox);
 
         monitorComboBox = new JComboBox<MonitorOption>(monitory.toArray(new MonitorOption[0]));
-        ustawCombo(monitorComboBox);
+        stylComboBox(monitorComboBox);
         monitorComboBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 przeladujRozdzielczosci();
             }
         });
-        dodajOpisanePole(panelOpcji, "Monitor", monitorComboBox, 206);
+        grafika.add(monitorComboBox);
 
-        rozdzielczoscComboBox = new JComboBox<String>();
-        ustawCombo(rozdzielczoscComboBox);
-        rozdzielczoscComboBox.addActionListener(new ActionListener() {
+        grafikaComboBox = new JComboBox<String>();
+        stylComboBox(grafikaComboBox);
+        grafikaComboBox.setMaximumRowCount(100);
+        grafikaComboBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int index = rozdzielczoscComboBox.getSelectedIndex();
+                int index = grafikaComboBox.getSelectedIndex();
                 if (index >= 0 && index < aktualneRozdzielczosci.size()) {
                     Dimension rozdzielczosc = aktualneRozdzielczosci.get(index);
                     GrafikaS = rozdzielczosc.width;
@@ -152,29 +189,54 @@ public class App implements ActionListener {
                 }
             }
         });
-        dodajOpisanePole(panelOpcji, "Rozdzielczosc okna", rozdzielczoscComboBox, 294);
+        grafika.add(grafikaComboBox);
 
-        PelnyEkran = new JCheckBox("Uruchom w pelnym ekranie");
-        PelnyEkran.setFocusable(false);
-        PelnyEkran.setForeground(Color.WHITE);
-        PelnyEkran.setBackground(new Color(13, 17, 23));
-        PelnyEkran.setBounds(4, 386, panelOpcji.getWidth() - 8, 34);
-        PelnyEkran.setFont(new Font("Arial", Font.BOLD, 16));
+        jakoscComboBox = new JComboBox<String>(new String[]{"Najlepsza"});
+        stylComboBox(jakoscComboBox);
+        grafika.add(jakoscComboBox);
+
+        Graj = new JButton("GRAJ");
+        Graj.setFocusable(false);
+        Graj.setBorder(null);
+        Graj.setForeground(Color.WHITE);
+        Graj.setFont(new Font("Bahnschift", Font.BOLD, 30));
+        Graj.setBorder(new EmptyBorder(10, 10, 10, 10));
+        Graj.setBackground(new Color(10, 10, 10));
+        Graj.setContentAreaFilled(false);
+        Graj.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                uruchomWybranaGre();
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                Graj.setForeground(Color.GREEN);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                Graj.setForeground(Color.WHITE);
+            }
+        });
+        grafika.add(Graj);
+
+        FalseIcon = new ImageIcon(new ImageIcon("lib\\False.png").getImage().getScaledInstance(Math.max(12, Szerokosc / 32), Math.max(12, Szerokosc / 32), Image.SCALE_DEFAULT));
+        TrueIcon = new ImageIcon(new ImageIcon("lib\\True.png").getImage().getScaledInstance(Math.max(12, Szerokosc / 32), Math.max(12, Szerokosc / 32), Image.SCALE_DEFAULT));
+
+        PelnyEkran = new JCheckBox("FullScreen");
+        stylCheckBox(PelnyEkran);
         PelnyEkran.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                rozdzielczoscComboBox.setEnabled(!PelnyEkran.isSelected());
+                grafikaComboBox.setEnabled(!PelnyEkran.isSelected());
                 przeladujRozdzielczosci();
             }
         });
-        panelOpcji.add(PelnyEkran);
+        grafika.add(PelnyEkran);
 
-        WczytanieZapisu = new JCheckBox("Wczytaj zapisane ustawienia");
-        WczytanieZapisu.setFocusable(false);
-        WczytanieZapisu.setForeground(Color.WHITE);
-        WczytanieZapisu.setBackground(new Color(13, 17, 23));
-        WczytanieZapisu.setBounds(4, 424, panelOpcji.getWidth() - 8, 34);
-        WczytanieZapisu.setFont(new Font("Arial", Font.BOLD, 16));
+        WczytanieZapisu = new JCheckBox("Wczytac Ustawienia");
+        stylCheckBox(WczytanieZapisu);
         WczytanieZapisu.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -183,118 +245,128 @@ public class App implements ActionListener {
                 }
             }
         });
-        panelOpcji.add(WczytanieZapisu);
-
-        JButton graj = new JButton("START");
-        graj.setFocusable(false);
-        graj.setBounds(4, panelOpcji.getHeight() - 72, panelOpcji.getWidth() - 8, 54);
-        graj.setForeground(Color.BLACK);
-        graj.setBackground(new Color(255, 174, 25));
-        graj.setFont(new Font("Arial", Font.BOLD, 26));
-        graj.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                uruchomWybranaGre();
-            }
-        });
-        panelOpcji.add(graj);
+        grafika.add(WczytanieZapisu);
 
         przeladujRozdzielczosci();
     }
 
-    private void zbudujPanelPodgladu() {
-        panelPodgladu = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                rysujPodglad((Graphics2D) g);
-            }
-        };
-        panelPodgladu.setBackground(new Color(23, 45, 64));
-        panelPodgladu.setBounds(LAUNCHER_WIDTH / 2 + 20, 72, LAUNCHER_WIDTH / 2 - 52, LAUNCHER_HEIGHT - 104);
+    private void zbudujPanelSterowania() {
+        sterowanie = new JPanel();
+        sterowanie.setBackground(new Color(10, 10, 10));
+        sterowanie.setBounds((Szerokosc / 19) * 10, Wysokosc / 10, (Szerokosc / 83) * 40, Wysokosc / 2 + Wysokosc / 3 + Wysokosc / 30);
+        sterowanie.setLayout(null);
+        sterowanie.setBorder(border);
+
+        JLabel tytul = new JLabel("SNAKE", JLabel.CENTER);
+        tytul.setBounds(0, 20, sterowanie.getWidth(), 70);
+        tytul.setForeground(Color.ORANGE);
+        tytul.setFont(new Font("Biting My Nails", Font.BOLD, Math.max(34, Szerokosc / 18)));
+        sterowanie.add(tytul);
+
+        JLabel info = new JLabel("Stary launcher, nowy kregoslup.", JLabel.CENTER);
+        info.setBounds(0, 100, sterowanie.getWidth(), 34);
+        info.setForeground(Color.WHITE);
+        info.setFont(new Font("Bahnschift", Font.BOLD, 20));
+        sterowanie.add(info);
+
+        JTextArea opis = new JTextArea(
+                "Gra dalej wybiera monitor i gre z listy, ale wizualnie wraca do starego stylu. " +
+                        "Snake jest rysowany na siatce " + SnakeGrid.COLUMNS + "x" + SnakeGrid.ROWS + ", wiec rozdzielczosc okna nie psuje online."
+        );
+        opis.setBounds(30, 150, sterowanie.getWidth() - 60, 150);
+        opis.setForeground(new Color(220, 220, 220));
+        opis.setBackground(new Color(10, 10, 10));
+        opis.setFont(new Font("Bahnschift", Font.BOLD, 18));
+        opis.setLineWrap(true);
+        opis.setWrapStyleWord(true);
+        opis.setEditable(false);
+        opis.setFocusable(false);
+        sterowanie.add(opis);
     }
 
     private void rysujPodglad(Graphics2D g) {
+        g.setColor(new Color(10, 10, 10));
+        g.fillRect(0, 0, obraz.getWidth(), obraz.getHeight());
+
+        g.setColor(Color.ORANGE);
+        g.setFont(new Font("Bahnschift", Font.BOLD, Math.max(22, obraz.getWidth() / 10)));
+        g.drawString("SNAKE", obraz.getWidth() / 12, obraz.getHeight() / 5);
+
+        int previewCell = Math.max(4, Math.min((obraz.getWidth() - 60) / SnakeGrid.COLUMNS, (obraz.getHeight() - 110) / SnakeGrid.ROWS));
+        int boardW = previewCell * SnakeGrid.COLUMNS;
+        int boardH = previewCell * SnakeGrid.ROWS;
+        int startX = (obraz.getWidth() - boardW) / 2;
+        int startY = obraz.getHeight() / 2 - boardH / 2 + 25;
+
         g.setColor(new Color(23, 45, 64));
-        g.fillRoundRect(0, 0, panelPodgladu.getWidth(), panelPodgladu.getHeight(), 24, 24);
-
-        g.setColor(new Color(255, 174, 25));
-        g.setFont(new Font("Arial", Font.BOLD, 28));
-        g.drawString("Snake", 32, 54);
-
-        g.setColor(new Color(180, 190, 205));
-        g.setFont(new Font("Arial", Font.PLAIN, 15));
-        g.drawString("Plansza dziala na logicznej siatce " + SnakeGrid.COLUMNS + "x" + SnakeGrid.ROWS + ",", 32, 90);
-        g.drawString("a nie na humorze rozdzielczosci.", 32, 112);
-
-        int previewX = 32;
-        int previewY = 154;
-        int previewCell = Math.max(6, Math.min((panelPodgladu.getWidth() - 64) / SnakeGrid.COLUMNS, 12));
-        int previewW = previewCell * SnakeGrid.COLUMNS;
-        int previewH = previewCell * SnakeGrid.ROWS;
-
-        g.setColor(new Color(13, 17, 23));
-        g.fillRect(previewX, previewY, previewW, previewH);
-
-        g.setColor(new Color(55, 65, 84));
-        for (int x = 0; x <= SnakeGrid.COLUMNS; x += 4) {
-            int px = previewX + x * previewCell;
-            g.drawLine(px, previewY, px, previewY + previewH);
-        }
-        for (int y = 0; y <= SnakeGrid.ROWS; y += 4) {
-            int py = previewY + y * previewCell;
-            g.drawLine(previewX, py, previewX + previewW, py);
-        }
+        g.fillRect(startX, startY, boardW, boardH);
+        g.setColor(Color.ORANGE);
+        g.drawRect(startX, startY, boardW, boardH);
 
         g.setColor(Color.PINK);
-        g.fillRect(previewX + 20 * previewCell, previewY + 14 * previewCell, previewCell, previewCell);
-        g.setColor(Color.BLACK);
+        g.fillRect(startX + 20 * previewCell, startY + 14 * previewCell, previewCell, previewCell);
+        g.setColor(Color.WHITE);
         for (int i = 1; i < 6; i++) {
-            g.fillRect(previewX + (20 - i) * previewCell, previewY + 14 * previewCell, previewCell, previewCell);
+            g.fillRect(startX + (20 - i) * previewCell, startY + 14 * previewCell, previewCell, previewCell);
         }
         g.setColor(Color.ORANGE);
-        g.fillOval(previewX + 29 * previewCell, previewY + 10 * previewCell, previewCell, previewCell);
+        g.fillOval(startX + 29 * previewCell, startY + 10 * previewCell, previewCell, previewCell);
     }
 
-    private void dodajOpisanePole(JPanel parent, String tekst, JComponent component, int y) {
-        JLabel label = etykieta(tekst, 4, y, parent.getWidth() - 8, 24, 15, new Color(156, 163, 175));
-        label.setHorizontalAlignment(SwingConstants.LEFT);
-        component.setBounds(4, y + 28, parent.getWidth() - 8, 42);
-        parent.add(label);
-        parent.add(component);
-    }
-
-    private JLabel etykieta(String tekst, int x, int y, int width, int height, int fontSize, Color color) {
-        JLabel label = new JLabel(tekst, SwingConstants.CENTER);
-        label.setBounds(x, y, width, height);
-        label.setFont(new Font("Arial", Font.BOLD, fontSize));
-        label.setForeground(color);
-        return label;
-    }
-
-    private void ustawCombo(JComboBox<?> comboBox) {
+    private void stylComboBox(JComboBox<?> comboBox) {
         comboBox.setFocusable(false);
+        comboBox.setBorder(null);
         comboBox.setForeground(Color.WHITE);
-        comboBox.setBackground(new Color(8, 11, 17));
-        comboBox.setFont(new Font("Arial", Font.BOLD, 16));
+        comboBox.setFont(new Font("Bahnschift", Font.BOLD, 24));
+        comboBox.setBorder(new EmptyBorder(8, 10, 8, 10));
+        comboBox.setBackground(new Color(10, 10, 10));
+        comboBox.setUI(new BasicComboBoxUI() {
+            @Override
+            protected JButton createArrowButton() {
+                JButton button = new JButton("▲");
+                button.setBorder(null);
+                button.setForeground(Color.WHITE);
+                button.setFont(czcionka2);
+                button.setContentAreaFilled(false);
+                return button;
+            }
+        });
+    }
+
+    private void stylCheckBox(JCheckBox checkBox) {
+        checkBox.setFocusable(false);
+        checkBox.setBorder(null);
+        checkBox.setForeground(Color.WHITE);
+        checkBox.setFont(new Font("Bahnschift", Font.BOLD, 20));
+        checkBox.setBorder(new EmptyBorder(10, 10, 10, 10));
+        checkBox.setBackground(new Color(10, 10, 10));
+        checkBox.setContentAreaFilled(false);
+        if (FalseIcon != null && TrueIcon != null) {
+            checkBox.setIcon(FalseIcon);
+            checkBox.setSelectedIcon(TrueIcon);
+        }
     }
 
     private void przeladujRozdzielczosci() {
+        if (monitorComboBox == null || grafikaComboBox == null) {
+            return;
+        }
+
         MonitorOption monitor = pobierzWybranyMonitor();
         aktualneRozdzielczosci = monitor.pobierzRozdzielczosci();
 
-        rozdzielczoscComboBox.removeAllItems();
+        grafikaComboBox.removeAllItems();
 
         for (Dimension rozdzielczosc : aktualneRozdzielczosci) {
-            rozdzielczoscComboBox.addItem(rozdzielczosc.width + " x " + rozdzielczosc.height);
+            grafikaComboBox.addItem(rozdzielczosc.width + " × " + rozdzielczosc.height);
         }
 
         if (PelnyEkran != null && PelnyEkran.isSelected()) {
             GrafikaS = monitor.getBounds().width;
             GrafikaW = monitor.getBounds().height;
-            rozdzielczoscComboBox.setEnabled(false);
+            grafikaComboBox.setEnabled(false);
         } else {
-            rozdzielczoscComboBox.setEnabled(true);
+            grafikaComboBox.setEnabled(true);
             wybierzNajlepszaRozdzielczoscOkna(monitor);
         }
     }
@@ -318,7 +390,7 @@ public class App implements ActionListener {
         }
 
         if (!aktualneRozdzielczosci.isEmpty()) {
-            rozdzielczoscComboBox.setSelectedIndex(bestIndex);
+            grafikaComboBox.setSelectedIndex(bestIndex);
             Dimension selected = aktualneRozdzielczosci.get(bestIndex);
             GrafikaS = selected.width;
             GrafikaW = selected.height;
@@ -335,7 +407,7 @@ public class App implements ActionListener {
     }
 
     private GameEntry pobierzWybranaGre() {
-        Object selected = wyborGryComboBox.getSelectedItem();
+        Object selected = graComboBox.getSelectedItem();
         if (selected instanceof GameEntry) {
             return (GameEntry) selected;
         }
@@ -345,13 +417,12 @@ public class App implements ActionListener {
 
     private void wczytajUstawieniaDoLaunchera() {
         LauncherConfig config = LauncherConfig.load();
-        if (config == null) {
+        if (config == null || graComboBox == null || monitorComboBox == null || PelnyEkran == null) {
             return;
         }
 
         wybierzGre(config.getGameId());
         wybierzMonitor(config.getMonitorIndex());
-
         PelnyEkran.setSelected(config.isFullscreen());
         przeladujRozdzielczosci();
 
@@ -363,7 +434,7 @@ public class App implements ActionListener {
     private void wybierzGre(String gameId) {
         for (int i = 0; i < gry.size(); i++) {
             if (gry.get(i).getId().equals(gameId)) {
-                wyborGryComboBox.setSelectedIndex(i);
+                graComboBox.setSelectedIndex(i);
                 return;
             }
         }
@@ -378,7 +449,7 @@ public class App implements ActionListener {
         for (int i = 0; i < aktualneRozdzielczosci.size(); i++) {
             Dimension d = aktualneRozdzielczosci.get(i);
             if (d.width == width && d.height == height) {
-                rozdzielczoscComboBox.setSelectedIndex(i);
+                grafikaComboBox.setSelectedIndex(i);
                 return;
             }
         }
@@ -401,7 +472,7 @@ public class App implements ActionListener {
             new Gra();
             ramka.dispose();
         } else {
-            JOptionPane.showMessageDialog(ramka, "Ta gra nie ma jeszcze implementacji. Spokojnie, szkielet juz czeka.");
+            JOptionPane.showMessageDialog(ramka, "Ta gra nie ma jeszcze implementacji.");
         }
     }
 
